@@ -1,7 +1,5 @@
 const http = require('http');
 const fs = require('fs');
-const { buffer } = require('stream/consumers');
-
 const server = http.createServer((req, res)=>{
     const {url} = req;
     const {method} = req;
