@@ -1,19 +1,43 @@
 const http = require('http');
+const fs = require('fs');
+const { buffer } = require('stream/consumers');
 
 const server = http.createServer((req, res)=>{
-    console.log('hi sabareesan');
     const {url} = req;
-    res.setHeader( 'Content-Type','text/html');
-    if (url == '/home') {
-        res.write(`<html><body>Welcome Home</body></html>`);
-        res.end();
-    } else if (url == '/about') {
-        res.write(`<html><body>Welcome to About Us page</body></html>`);
-        res.end();
-    } else if (url == '/node') {
-        res.end(`<html><body>Welcome to my Node Js project</body></html>`);
-    } else {
-        res.end('404 Not Found');
+    const {method} = req;
+    if (url === '/') {
+        fs.readFile('message.txt', (err, message)=>{
+            res.write(`
+                <html>
+                    <title>Messge</title>
+                <body>
+                    <form action = "/message" method = "POST">
+                        <p>${message}</p>
+                        <input type="text" name="message">
+                        <button type="submit">Send</button>
+                    </form>
+                </body>
+                </html>`);
+                return res.end();
+        });
+    }
+    
+    if (url === '/message' && method === 'POST'){
+        const body = [];
+
+        req.on('data', (chunk)=>{
+            body.push(chunk);
+        });
+
+        return req.on('end', ()=>{
+            const parsedBody = Buffer.concat(body).toString();
+            const message = parsedBody.split("=")[1];
+            fs.writeFile('message.txt', message, (err)=>{
+                res.statusCode = 302;
+                res.setHeader('location', '/');
+                return res.end();
+            });            
+        });
     }
 });
 
